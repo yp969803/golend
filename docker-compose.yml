@@ -1,0 +1,52 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo 
+    container_name: mongodb 
+    ports:
+      - "27017:27017" 
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=your_root_username 
+      - MONGO_INITDB_ROOT_PASSWORD=your_root_password 
+    volumes: 
+      - mongodb_data:/data/db 
+  
+  golang-server:
+     build:
+       context: ./backend
+       dockerfile: Dockerfile 
+     container_name: golang-server 
+     ports:
+       - "8000:8000"
+     depends_on: 
+       - mongodb
+     environment:
+       MONGODB_URI: mongodb://your_root_username:your_root_password@mongodb:27017/golend 
+  node-server: 
+     build:
+       context: ./golend_frontend/node_redis
+       dockerfile: Dockerfile 
+     container_name: node-server 
+     ports:
+       - "3001:3001"
+     depends_on: 
+       - redis 
+     environment: 
+       REDIS_HOST: redis
+  redis: 
+    image: redis 
+    container_name: redis 
+    ports: 
+      - "6379:6379"
+  react-app: 
+    build:
+      context: ./golend_frontend/frontend 
+      dockerfile: Dockerfile
+    container_name: react-app 
+    ports: 
+     - "80:80"
+    depends_on:
+      - golang-server 
+      - node-server
+volumes:
+  mongodb_data:
